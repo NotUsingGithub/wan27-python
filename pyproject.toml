@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wan27"
+version = "0.1.0"
+description = "Python client for Wan27 AI image and video generation, cost estimates and task tracking"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Wan27"}]
+keywords = ["wan27", "ai", "image-generation", "video-generation"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
+
+[project.urls]
+Homepage = "https://wan2-7.io/"
+Documentation = "https://wan2-7.io/mcp/guide/"
+Repository = "https://github.com/NotUsingGithub/wan27-python"
+Issues = "https://github.com/NotUsingGithub/wan27-python/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wan27"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "LICENSE", "pyproject.toml"]
