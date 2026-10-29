@@ -48,7 +48,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  publish:
+  publish-wan27:
     needs: build
     if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
@@ -61,5 +61,45 @@ jobs:
         with:
           name: python-distributions
           path: dist/
-      - name: Publish through PyPI Trusted Publishing
+      - name: Keep only wan27 distributions
+        run: |
+          set -euo pipefail
+          find dist -maxdepth 1 -type f ! -name 'wan27-*' -delete
+          find dist -maxdepth 1 -type f -name '*langchain*' -delete
+          echo "wan27 files to publish:"
+          find dist -maxdepth 1 -type f -print
+          test -n "$(find dist -maxdepth 1 -type f -name 'wan27-*' -print -quit)"
+          if find dist -maxdepth 1 -type f -name '*langchain*' -print -quit | grep -q .; then
+            echo "Refusing to publish langchain files from the wan27 job" >&2
+            exit 1
+          fi
+      - name: Publish wan27 through PyPI Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+
+  # PyPI allows one pending publisher per (owner, repo, workflow, environment).
+  publish-langchain-wan27:
+    needs: build
+    if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi-langchain
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: python-distributions
+          path: dist/
+      - name: Keep only langchain-wan27 distributions
+        run: |
+          set -euo pipefail
+          find dist -maxdepth 1 -type f ! \( -name 'langchain-wan27-*' -o -name 'langchain_wan27-*' \) -delete
+          echo "langchain-wan27 files to publish:"
+          find dist -maxdepth 1 -type f -print
+          test -n "$(find dist -maxdepth 1 -type f \( -name 'langchain-wan27-*' -o -name 'langchain_wan27-*' \) -print -quit)"
+          if find dist -maxdepth 1 -type f -name 'wan27-*' -print -quit | grep -q .; then
+            echo "Refusing to publish wan27 files from the langchain-wan27 job" >&2
+            exit 1
+          fi
+      - name: Publish langchain-wan27 through PyPI Trusted Publishing
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1

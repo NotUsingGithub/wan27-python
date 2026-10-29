@@ -16,13 +16,17 @@ At https://pypi.org/manage/account/publishing/ add two pending GitHub publishers
 one for each project. If either project already exists under your ownership,
 use its project settings to add an existing-project Trusted Publisher instead.
 
-| Field | Value |
-| --- | --- |
-| PyPI project name | `wan27` for the first entry, `langchain-wan27` for the second |
-| GitHub owner | `NotUsingGithub` |
-| Repository | `wan27-python` |
-| Workflow filename | `publish-pypi.yml` |
-| Environment | `pypi` |
+PyPI allows one pending publisher per owner, repository, workflow, and
+environment. The two projects share the workflow file and use different
+GitHub environments.
+
+| Field | `wan27` | `langchain-wan27` |
+| --- | --- | --- |
+| PyPI project name | `wan27` | `langchain-wan27` |
+| GitHub owner | `NotUsingGithub` | `NotUsingGithub` |
+| Repository | `wan27-python` | `wan27-python` |
+| Workflow filename | `publish-pypi.yml` | `publish-pypi.yml` |
+| Environment | `pypi` | `pypi-langchain` |
 
 This grants that specific workflow permission to publish these projects. The
 PyPI account owner must approve this binding in PyPI. Creating a project through
@@ -31,14 +35,18 @@ a pending publisher is subject to PyPI name availability and account limits.
 ## Validate without publishing
 
 Open Actions → Validate and optionally publish Python packages → Run workflow.
-Leave `publish` unchecked. The build job runs; the publish job is skipped. The
+Leave `publish` unchecked. The build job runs; both publish jobs are skipped. The
 `python-distributions` artifact contains both wheels and source distributions.
 
 ## Publish after the bindings are configured
 
-Run the same workflow on `main` with `publish` checked. The build must pass first;
-only the publish job can request a short-lived PyPI identity token. It uses the
-`pypi` GitHub environment. Configure required reviewers on that environment if
+Run the same workflow on `main` with `publish` checked. The build must pass first.
+Two publish jobs then download that artifact, keep only their own distribution
+files, and each request a short-lived PyPI identity token. `publish-wan27` uses
+the `pypi` environment and uploads `wan27-*` only. `publish-langchain-wan27` uses
+the `pypi-langchain` environment and uploads only `langchain_wan27-*`
+(the wheel and sdist names produced today) plus `langchain-wan27-*` if a
+build emits a hyphenated sdist. Configure required reviewers on those environments if
 available for the repository, to add a separate release review.
 
 Verify the actual PyPI versions and project links after publication:
